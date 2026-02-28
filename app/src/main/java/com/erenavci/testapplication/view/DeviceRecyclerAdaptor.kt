@@ -1,5 +1,6 @@
 package com.erenavci.testapplication.view
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -94,14 +95,26 @@ class DeviceRecyclerAdaptor : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             homeNumberTextField.setText(device.Platform)
             snNumberTextField.setText(device.PK_Device.toString())
             itemView.setOnClickListener {
-                onClickItem(device, context, imageUrl, false)
+                val loc = IntArray(2)
+                itemView.getLocationInWindow(loc)
+                val cx = loc[0] + itemView.width / 2f
+                val cy = loc[1] + itemView.height / 2f
+                launchWithConfetti(context, cx, cy) {
+                    onClickItem(device, context, imageUrl, false)
+                }
             }
             itemView.setOnLongClickListener {
                 onLongClickItem(device, context, recyclerAdaptor)
                 true
             }
             itemView.image_arrow_right.setOnClickListener {
-                onClickItem(device, context, imageUrl, true)
+                val loc = IntArray(2)
+                itemView.image_arrow_right.getLocationInWindow(loc)
+                val cx = loc[0] + itemView.image_arrow_right.width / 2f
+                val cy = loc[1] + itemView.image_arrow_right.height / 2f
+                launchWithConfetti(context, cx, cy) {
+                    onClickItem(device, context, imageUrl, true)
+                }
             }
         }
 
@@ -137,6 +150,24 @@ class DeviceRecyclerAdaptor : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             alert.setTitle("Warning")
 
             alert.show()
+        }
+
+        private fun launchWithConfetti(context: Context, cx: Float, cy: Float, action: () -> Unit) {
+            val activity = context as? Activity ?: run { action(); return }
+            val decor = activity.window.decorView as ViewGroup
+            val confettiView = ConfettiView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                isClickable = false
+                isFocusable = false
+            }
+            decor.addView(confettiView)
+            confettiView.burst(cx, cy) {
+                decor.removeView(confettiView)
+                action()
+            }
         }
 
         fun selectImage(platform: String, density: Int): String {
